@@ -1,0 +1,176 @@
+// PolicyMind — schema
+// Captures audit events from ArmorClaw, clusters repeated patterns,
+// stores Claude-drafted rules, and tracks ratified policies.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EventAction {
+  tool_call
+  policy_deny
+  rollback
+  override
+}
+
+enum EventStatus {
+  success
+  failed
+}
+
+enum DataClass {
+  PCI
+  PAYMENT
+  PHI
+  PII
+  NONE
+}
+
+enum DraftStatus {
+  pending
+  accepted
+  edited
+  dismissed
+}
+
+enum RuleAction {
+  allow
+  deny
+  require_approval
+}
+
+model AuditEvent {
+  id            String       @id @default(cuid())
+  orgId         String
+  runId         String?
+  planId        String?
+  userId        String?
+  agentId       String?
+  tool          String
+  action        EventAction
+  status        EventStatus
+  dataClass     DataClass    @default(NONE)
+  input         Json
+  output        Json?
+  errorMessage  String?
+  durationMs    Int          @default(0)
+  executedAt    DateTime
+  createdAt     DateTime     @default(now())
+  cluster       EventCluster? @relation(fields: [clusterId], references: [id])
+  clusterId     String?
+
+  @@index([orgId, createdAt])
+  @@index([orgId, tool, action])
+  @@index([clusterId])
+}
+
+model EventCluster {
+  id          String   @id @default(cuid())
+  orgId       String
+  signature   String   // hash of (tool, dataClass, normalized-arg-shape, action)
+  tool        String
+  action      EventAction
+  dataClass   DataClass    @default(NONE)
+  argShape    Json
+  count       Int          @default(0)
+  firstSeenAt DateTime
+  lastSeenAt  DateTime
+  events      AuditEvent[]
+  draft       PolicyDraft?
+  createdAt   DateTime     @default(now())
+
+  @@unique([orgId, signature])
+  @@index([orgId, lastSeenAt])
+}
+
+model PolicyDraft {
+  id              String       @id @default(cuid())
+  orgId           String
+  clusterId       String       @unique
+  cluster         EventCluster @relation(fields: [clusterId], references: [id])
+  ruleAction      RuleAction
+  ruleTool        String
+  ruleDataClass   DataClass    @default(NONE)
+  ruleParams      Json?
+  ruleId          String       // proposed id, e.g., "policy7"
+  plainEnglish    String       // user-facing summary
+  reasoning       String       @db.Text
+  dryRunMatched   Int          @default(0)
+  dryRunFalsePos  Int          @default(0)
+  basedOnEventIds String[]
+  status          DraftStatus  @default(pending)
+  createdAt       DateTime     @default(now())
+  decidedAt       DateTime?
+  decidedBy       String?
+  ratified        RatifiedPolicy?
+
+  @@index([orgId, status, createdAt])
+}
+
+model RatifiedPolicy {
+  id              String       @id @default(cuid())
+  orgId           String
+  draftId         String       @unique
+  draft           PolicyDraft  @relation(fields: [draftId], references: [id])
+  ruleAction      RuleAction
+  ruleTool        String
+  ruleDataClass   DataClass    @default(NONE)
+  ruleParams      Json?
+  ruleId          String
+  plainEnglish    String
+  version         Int          @default(1)
+  ratifiedAt      DateTime     @default(now())
+  ratifiedBy      String?
+  overrideCount   Int          @default(0)
+  active          Boolean      @default(true)
+  // ArmorClaw promotion proof (returned from /iap/sdk/token).
+  promotionMode   String?      // "live" | "demo"
+  armorPlanId     String?
+  armorIntentRef  String?
+  armorPlanHash   String?
+  armorMerkleRoot String?
+
+  @@index([orgId, active])
+}
+
+model WeeklyDigest {
+  id          String   @id @default(cuid())
+  orgId       String
+  weekOf      DateTime
+  draftIds    String[]
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([orgId, weekOf])
+}
+
+model TelegramSubscriber {
+  id            String   @id @default(cuid())
+  orgId         String
+  chatId        String
+  username      String?
+  firstName     String?
+  subscribedAt  DateTime @default(now())
+  active        Boolean  @default(true)
+
+  @@unique([orgId, chatId])
+}
+
+// Maps a Telegram message we sent to the underlying draft so callbacks
+// can edit the original card in place when the user taps Accept/Dismiss.
+model TelegramDraftMessage {
+  id          String   @id @default(cuid())
+  draftId    String
+  chatId     String
+  messageId  Int
+  createdAt  DateTime @default(now())
+
+  @@index([draftId])
+  @@index([chatId, messageId])
+}
+

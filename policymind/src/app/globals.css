@@ -1,0 +1,159 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Onest:wght@300..800&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/* PolicyMind design tokens.
+   Aesthetic direction: editorial security console.
+   Typography: Fraunces display serif (characterful, variable, optical sizing)
+   paired with Onest body (modern geometric sans). Mono for IDs and code.
+   Palette: deep ink background, warm-grey paper cards, refined teal accent
+   with one editorial gold for emphasis. Subtle film grain for atmosphere.
+   Anti-pattern guardrails: no Inter / Roboto / Arial, no neon green, no
+   purple-on-white AI gradients, no scanline cliches, no flat solid surfaces. */
+:root {
+  --bg-0: #0a0b10;          /* deep ink */
+  --bg-1: #11131c;          /* paper-card surface */
+  --bg-2: #181b27;          /* inset (input bg, code) */
+  --bg-3: #232735;          /* hover lift */
+  --line: rgba(214, 219, 228, 0.08);
+  --line-strong: rgba(214, 219, 228, 0.18);
+  --text: #e9ecf3;
+  --text-muted: #a4abbb;
+  --text-dim: #6e7588;
+  --accent: #8aa9a1;        /* desaturated teal — quiet, editorial, never glowing */
+  --accent-soft: rgba(138, 169, 161, 0.10);
+  --accent-strong: #b8d4cb;
+  --gold: #c9a96b;          /* editorial gold — emphasis only */
+  --gold-soft: rgba(201, 169, 107, 0.14);
+  --success: #6ee7b7;
+  --success-soft: rgba(110, 231, 183, 0.10);
+  --warn: #f7c873;
+  --warn-soft: rgba(247, 200, 115, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.10);
+  --info: #93c5fd;
+  --info-soft: rgba(147, 197, 253, 0.10);
+  --violet: #c4b5fd;
+  --violet-soft: rgba(196, 181, 253, 0.10);
+}
+
+@theme inline {
+  --color-bg-0: var(--bg-0);
+  --color-bg-1: var(--bg-1);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-accent: var(--accent);
+  --color-gold: var(--gold);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-violet: var(--violet);
+  --font-sans: "Onest", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Onest", ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html, body {
+  background: var(--bg-0);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "ss02", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
+}
+
+/* Soft atmospheric background — single warm-cool gradient, not a marketing
+   spotlight. Layered with a film-grain SVG for editorial depth. */
+body {
+  background:
+    radial-gradient(ellipse 70% 50% at 18% -10%, rgba(94, 234, 212, 0.07), transparent 60%),
+    radial-gradient(ellipse 50% 45% at 100% 110%, rgba(201, 169, 107, 0.05), transparent 60%),
+    var(--bg-0);
+  background-attachment: fixed;
+  position: relative;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.18'/%3E%3C/svg%3E");
+  z-index: 1;
+}
+body > * { position: relative; z-index: 2; }
+
+.font-mono { font-family: var(--font-mono); }
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 0;
+  letter-spacing: -0.02em;
+}
+.font-display-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-optical-sizing: auto;
+  font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 1;
+  letter-spacing: -0.015em;
+}
+
+/* Slim neutral scrollbars. */
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+::selection { background: var(--accent-soft); color: var(--text); }
+:focus-visible {
+  outline: 1px solid var(--accent-strong);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+input:focus, input:focus-visible, textarea:focus, textarea:focus-visible {
+  outline: none;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.pulse-dot { animation: pulse-dot 2.4s ease-in-out infinite; }
+
+@keyframes typing-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.caret::after {
+  content: "_";
+  margin-left: 2px;
+  animation: typing-caret 1s steps(1) infinite;
+  color: var(--accent);
+}
+
+/* Page-load reveal — one orchestrated stagger, not micro-fidget. */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  animation: reveal-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.reveal-1 { animation-delay: 60ms; }
+.reveal-2 { animation-delay: 140ms; }
+.reveal-3 { animation-delay: 240ms; }
+.reveal-4 { animation-delay: 360ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot, .caret::after, .reveal { animation: none; }
+}
