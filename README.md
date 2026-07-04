@@ -1,5 +1,7 @@
 # PolicyMind
 
+> Thesis submission repo — full source in `policymind/`, report and demo video at the root.
+
 The security policy that writes itself.
 
 PolicyMind is the ArmorPolicy feedback loop: every approval, denial, and
